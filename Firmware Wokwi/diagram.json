@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "author": "MạnhV Bùi",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 19.2, "left": -43.16, "attrs": {} },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -162.9,
+      "left": -34.2,
+      "attrs": { "humidity": "39.5", "temperature": "29.9" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 44.4,
+      "left": 138.2,
+      "attrs": { "color": "blue" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 44.4,
+      "left": 243.8,
+      "attrs": { "color": "green" }
+    },
+    { "type": "wokwi-led", "id": "led3", "top": 44.4, "left": 195.8, "attrs": { "color": "red" } },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 109.55,
+      "left": 86.4,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 90.35,
+      "left": 86.4,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 147.95,
+      "left": 86.4,
+      "attrs": { "value": "220" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:3V3", "dht1:VCC", "red", [ "h-28.65", "v-86.4" ] ],
+    [ "dht1:SDA", "esp:4", "green", [ "v38.4", "h86.5", "v172.8" ] ],
+    [ "dht1:GND", "esp:GND.2", "black", [ "h86.4", "v96" ] ],
+    [ "esp:18", "r3:1", "orange", [ "h0" ] ],
+    [ "r3:2", "led2:A", "orange", [ "v0", "h18" ] ],
+    [ "esp:GND.2", "led2:C", "black", [ "h182.4", "v48" ] ],
+    [ "esp:19", "r1:1", "orange", [ "h0" ] ],
+    [ "r1:2", "led3:A", "orange", [ "v0", "h18" ] ],
+    [ "led3:C", "esp:GND.2", "black", [ "h-18.8", "v-38.4" ] ],
+    [ "esp:23", "r2:1", "orange", [ "h0" ] ],
+    [ "r2:2", "led1:A", "orange", [ "h18" ] ],
+    [ "esp:GND.2", "led1:C", "black", [ "h76.8", "v38.4" ] ]
+  ],
+  "dependencies": {}
+}
