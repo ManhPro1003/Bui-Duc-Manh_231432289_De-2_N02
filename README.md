@@ -223,7 +223,7 @@ Tên thư mục có thể thay đổi theo cách bạn sắp xếp các tệp th
 
 - **Đề tài:** Thiết kế hệ thống giám sát dữ liệu môi trường vườn cây công nghiệp (cà phê, hồ tiêu).
 - **Nền tảng:** ESP32 – FreeRTOS – MQTT.
-- **Giảng viên hướng dẫn:** Thầy Lã Võ Quang Sơn.
+- **Giảng viên hướng dẫn:** Thầy Võ Quang Sơn.
 - **Mục đích:** Bài tập thực hành vận dụng kiến thức về hệ điều hành thời gian thực và Internet vạn vật (IoT).
 
 ---
