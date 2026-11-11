@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c2f">
+  <title>Vườn Cây Thông Minh | Giám sát môi trường</title>
+  <style>
+    :root {
+      --bg: #f3f7f3;
+      --surface: #ffffff;
+      --surface-soft: #f8fbf8;
+      --text: #172b23;
+      --muted: #68786f;
+      --line: #e1e9e2;
+      --green: #237a50;
+      --green-dark: #145438;
+      --green-soft: #e9f5ed;
+      --blue: #3674b9;
+      --blue-soft: #eaf2fb;
+      --amber: #a56411;
+      --amber-soft: #fff4df;
+      --red: #c74949;
+      --red-soft: #fff0ef;
+      --teal: #0d9488;
+      --teal-soft: #e5f6f3;
+      --shadow: 0 12px 32px rgba(25, 62, 42, .07);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .page { max-width: 1240px; margin: 0 auto; padding: 26px 22px 36px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .brand-mark {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(145deg, #267b4c, #124c35);
+      display: grid; place-items: center; color: #fff;
+      box-shadow: 0 8px 18px #1d6a4433; flex: none;
+    }
+    .brand-mark svg { width: 27px; height: 27px; }
+    .eyebrow { letter-spacing: .12em; color: var(--green); font-weight: 800; font-size: 10px; }
+    h1 { margin: 3px 0 0; font-size: clamp(21px, 3vw, 30px); letter-spacing: -.035em; line-height: 1.15; }
+    .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .connection-pill {
+      display: flex; align-items: center; gap: 8px; border: 1px solid var(--line);
+      background: var(--surface); padding: 10px 13px; border-radius: 999px;
+      font-size: 12px; color: var(--muted); white-space: nowrap;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #adb7b0; flex: none; }
+    .dot.connected { background: #27a466; box-shadow: 0 0 0 4px #27a4661f; }
+    .dot.connecting { background: #d99525; box-shadow: 0 0 0 4px #d995251f; }
+    .dot.disconnected { background: #c74949; box-shadow: 0 0 0 4px #c749491c; }
+    .outline-btn, .primary-btn, .device-btn {
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+      background: var(--surface); color: var(--text); font-weight: 750; font-size: 12px;
+      transition: .18s ease;
+    }
+    .outline-btn:hover, .device-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 7px 16px rgba(20,70,44,.08); }
+    .primary-btn { background: var(--green); color: #fff; border-color: var(--green); }
+    .primary-btn:hover { background: var(--green-dark); }
+    button:disabled { opacity: .48; cursor: not-allowed; transform: none; box-shadow: none; }
+    .hero {
+      position: relative; overflow: hidden; padding: 28px 30px; border-radius: 26px;
+      background: linear-gradient(115deg, #123f2d 0%, #1b6745 58%, #2e8054 100%);
+      color: #fff; box-shadow: var(--shadow); margin-bottom: 22px;
+    }
+    .hero:after {
+      content: ""; position: absolute; right: -60px; top: -135px; width: 390px; height: 390px;
+      border: 1px solid #ffffff20; border-radius: 50%;
+      box-shadow: 0 0 0 40px #ffffff08, 0 0 0 80px #ffffff06; pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .hero h2 { font-size: clamp(22px, 3.2vw, 33px); letter-spacing: -.035em; margin: 8px 0; max-width: 650px; line-height: 1.15; }
+    .hero p { margin: 0; color: #d4e7da; max-width: 690px; font-size: 13px; }
+    .hero-kicker {
+      display: inline-flex; gap: 8px; align-items: center; border: 1px solid #ffffff35;
+      background: #ffffff12; border-radius: 999px; padding: 7px 11px;
+      font-size: 10px; letter-spacing: .08em; font-weight: 800; color: #e2f4e7;
+    }
+    .hero-side { min-width: 175px; text-align: right; }
+    .hero-side .big { font-size: 27px; font-weight: 800; letter-spacing: -.04em; }
+    .hero-side .small { font-size: 11px; color: #d2e5d8; margin-top: 4px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 24px 2px 12px; }
+    .section-head h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .section-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .section-tag { border: 1px solid var(--line); padding: 6px 9px; border-radius: 999px; color: var(--muted); font-size: 10px; white-space: nowrap; background: #ffffffa8; }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .metric-card, .panel {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: 0 5px 19px rgba(20,63,42,.025); min-width: 0;
+    }
+    .metric-card { padding: 20px 22px; }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .metric-label { font-size: 12px; color: var(--muted); font-weight: 750; }
+    .metric-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; flex: none; }
+    .metric-icon svg { width: 22px; height: 22px; }
+    .temp-icon { background: var(--red-soft); color: var(--red); }
+    .hum-icon { background: var(--blue-soft); color: var(--blue); }
+    .metric-value { margin: 10px 0 3px; display: flex; align-items: baseline; gap: 5px; letter-spacing: -.05em; }
+    .metric-value strong { font-size: clamp(35px, 4.5vw, 47px); font-weight: 800; line-height: 1.08; }
+    .metric-value span { font-size: 16px; font-weight: 700; color: var(--muted); letter-spacing: -.02em; }
+    .metric-note { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-top: 12px; }
+    .mini-line { height: 4px; background: #edf1ed; border-radius: 99px; overflow: hidden; flex: 1; max-width: 145px; }
+    .mini-line span { height: 100%; width: 0; display: block; background: var(--green); border-radius: 99px; transition: width .35s; }
+    .hum-line span { background: var(--blue); }
+    .layout-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+    .panel { padding: 20px 21px; }
+    .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 15px; }
+    .panel-title { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+    .panel-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .chart-wrap { position: relative; height: 225px; width: 100%; }
+    .chart-legend { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; color: var(--muted); white-space: nowrap; }
+    .legend-line { display: inline-block; width: 18px; height: 3px; border-radius: 8px; background: #d7655d; }
+    .legend-blue { background: var(--blue); }
+    .control-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .device-card { border: 1px solid var(--line); border-radius: 16px; padding: 17px; background: var(--surface); min-width: 0; }
+    .device-top { display: flex; align-items: center; gap: 11px; }
+    .device-icon { width: 43px; height: 43px; border-radius: 14px; display: grid; place-items: center; flex: none; background: #f0f3f0; color: #607168; }
+    .device-icon svg { width: 23px; height: 23px; }
+    .device-card.is-on .device-icon.pump { background: var(--red-soft); color: var(--red); }
+    .device-card.is-on .device-icon.fan { background: var(--blue-soft); color: var(--blue); }
+    .device-card.is-on .device-icon.mist { background: var(--teal-soft); color: var(--teal); }
+    .device-info { flex: 1; min-width: 0; }
+    .device-name { font-size: 13px; font-weight: 800; }
+    .device-state { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 10px; color: var(--muted); }
+    .state-dot { height: 7px; width: 7px; border-radius: 50%; background: #aab4ad; flex: none; }
+    .is-on .state-dot { background: #27a466; }
+    .device-btn { width: 100%; margin-top: 15px; padding: 10px 12px; }
+    .device-btn.turn-on { background: var(--green); color: #fff; border-color: var(--green); }
+    .device-btn.turn-off { background: #fff; color: var(--red); border-color: #efcaca; }
+    .mist-card { background: linear-gradient(180deg, #fff 0%, #fbfefd 100%); }
+    .mist-current { margin: 16px 0 5px; display: flex; align-items: baseline; gap: 7px; }
+    .mist-current strong { color: var(--teal); font-size: 32px; letter-spacing: -.04em; }
+    .mist-current span { font-size: 12px; color: var(--muted); font-weight: 700; }
+    .mist-rule { margin-top: 9px; min-height: 54px; padding: 10px 11px; border-radius: 11px; background: var(--teal-soft); color: #176e67; font-size: 11px; line-height: 1.55; }
+    .mist-explain { color: var(--muted); font-size: 10px; margin-top: 8px; line-height: 1.5; }
+    .manual-hint { display: flex; gap: 9px; align-items: flex-start; border-radius: 13px; background: var(--amber-soft); color: #815318; padding: 12px; font-size: 11px; margin-top: 14px; }
+    .manual-hint svg { width: 17px; height: 17px; flex: none; margin-top: 1px; }
+    .manual-hint.ok { background: var(--green-soft); color: var(--green-dark); }
+    .broker-panel { margin-top: 17px; }
+    .config-grid { display: grid; grid-template-columns: 1.2fr 1.5fr auto; gap: 12px; align-items: end; }
+    .field label { display: block; font-size: 10px; color: var(--muted); font-weight: 800; margin-bottom: 6px; }
+    .field input { width: 100%; min-width: 0; background: #fbfcfb; border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; color: var(--text); outline: none; font-size: 11px; }
+    .field input:focus { border-color: #7fb995; box-shadow: 0 0 0 3px #2a865018; }
+    .config-help { font-size: 10px; color: var(--muted); margin: 12px 0 0; line-height: 1.55; }
+    .topic-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .topic-item { min-width: 0; background: var(--surface-soft); border: 1px solid var(--line); padding: 9px 10px; border-radius: 10px; }
+    .topic-label { font-size: 10px; color: var(--muted); font-weight: 800; margin-bottom: 4px; }
+    .topic-item code { display: block; font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; color: #2c5940; }
+    .log { margin-top: 13px; background: #14281f; border-radius: 13px; padding: 12px 14px; color: #d2e9d8; font: 10px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; max-height: 150px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    .footer { margin-top: 24px; display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 10px; align-items: flex-start; }
+    .footer strong { color: var(--text); }
+    .toast { position: fixed; right: 20px; bottom: 20px; max-width: min(380px, calc(100vw - 40px)); padding: 13px 16px; border-radius: 13px; background: #173b2a; color: #fff; box-shadow: 0 12px 36px #071c1238; font-size: 12px; opacity: 0; transform: translateY(12px); pointer-events: none; transition: .22s; z-index: 10; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 900px) { .control-grid { grid-template-columns: 1fr 1fr; } .mist-card { grid-column: 1 / -1; } }
+    @media (max-width: 700px) { .page { padding: 17px 12px 26px; } .topbar { align-items: flex-start; flex-direction: column; } .top-actions { width: 100%; justify-content: space-between; } .hero { padding: 22px 19px; } .hero-content { align-items: flex-start; flex-direction: column; } .hero-side { text-align: left; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .metrics, .layout-two { grid-template-columns: 1fr; } .control-grid { grid-template-columns: 1fr; } .mist-card { grid-column: auto; } .config-grid { grid-template-columns: 1fr; } .config-grid .primary-btn { width: 100%; } .topic-list { grid-template-columns: 1fr; } .panel { padding: 16px; } .footer { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.5 3.5C12 3.7 5.2 6 4 12.1c-.7 3.4 1.7 6 4.8 5.6C15 17 18.8 11 20.5 3.5Z"/>
+            <path d="M3 21c2.7-5.3 6.2-8.5 12.1-11.7"/><path d="M7 14c1.7.1 3.1.8 4.2 2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="eyebrow">NÔNG NGHIỆP THÔNG MINH · HỆ THỐNG NHÚNG</div>
+          <h1>Vườn trồng cây công nghiệp thông minh</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="connection-pill" role="status" aria-live="polite">
+          <span class="dot connecting" id="connectionDot"></span>
+          <span id="connectionText">Đang kết nối MQTT…</span>
+        </div>
+        <button class="outline-btn" id="scrollConfigBtn" type="button">Cấu hình kết nối ↓</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-content">
+        <div>
+          <span class="hero-kicker">● GIÁM SÁT MÔI TRƯỜNG VƯỜN CÂY</span>
+          <h2>Theo dõi nhiệt độ, độ ẩm<br>và điều khiển thiết bị từ xa.</h2>
+          <p>Thu thập dữ liệu từ cảm biến DHT22 qua ESP32, truyền bằng MQTT và hiển thị trực tiếp trên Website. Máy phun sương tự động hoạt động theo ngưỡng độ ẩm đã cài đặt.</p>
+        </div>
+        <div class="hero-side">
+          <div class="big" id="clockText">--:--:--</div>
+          <div class="small">Thời gian hiện tại</div>
+          <div class="small" id="lastUpdateText" style="margin-top:9px">Chưa nhận dữ liệu cảm biến</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <div><h2>Tổng quan môi trường</h2><p>Số liệu mới nhất nhận được từ cảm biến DHT22 qua MQTT.</p></div>
+      <span class="section-tag" id="sensorFreshness">Đang chờ dữ liệu</span>
+    </div>
+    <section class="metrics" aria-label="Số liệu cảm biến">
+      <article class="metric-card">
+        <div class="metric-top">
+          <div class="metric-label">Nhiệt độ không khí</div>
+          <div class="metric-icon temp-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.8V5a3 3 0 0 0-6 0v9.8a5 5 0 1 0 6 0Z"/><path d="M11 11v7"/><path d="M8 6h3"/></svg>
+          </div>
+        </div>
+        <div class="metric-value"><strong id="temperatureValue">--.-</strong><span>°C</span></div>
+        <div class="metric-note"><span id="temperatureNote">Chưa có số liệu</span><span class="mini-line"><span id="temperatureBar"></span></span></div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-top">
+          <div class="metric-label">Độ ẩm không khí</div>
+          <div class="metric-icon hum-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s-6.5 7.1-6.5 11.4a6.5 6.5 0 0 0 13 0C18.5 10.1 12 3 12 3Z"/><path d="M9 15.5c.4 1.3 1.4 2 2.8 2.1"/></svg>
+          </div>
+        </div>
+        <div class="metric-value"><strong id="humidityValue">--.-</strong><span>%</span></div>
+        <div class="metric-note"><span id="humidityNote">Mục tiêu độ ẩm: 40–60%</span><span class="mini-line hum-line"><span id="humidityBar"></span></span></div>
+      </article>
+    </section>
+
+    <div class="section-head">
+      <div><h2>Biểu đồ theo dõi thời gian thực</h2><p>Biểu đồ tự cập nhật khi trình duyệt nhận bản tin cảm biến mới.</p></div>
+      <span class="section-tag">30 mẫu gần nhất</span>
+    </div>
+    <section class="layout-two" aria-label="Biểu đồ nhiệt độ và độ ẩm">
+      <article class="panel">
+        <div class="panel-header"><div><h3 class="panel-title">Diễn biến nhiệt độ</h3><p class="panel-subtitle">Đơn vị: °C</p></div><div class="chart-legend"><span class="legend-line"></span>Nhiệt độ</div></div>
+        <div class="chart-wrap"><canvas id="temperatureChart" aria-label="Biểu đồ nhiệt độ" role="img"></canvas></div>
+      </article>
+      <article class="panel">
+        <div class="panel-header"><div><h3 class="panel-title">Diễn biến độ ẩm</h3><p class="panel-subtitle">Đơn vị: % · Vùng mục tiêu: 40–60%</p></div><div class="chart-legend"><span class="legend-line legend-blue"></span>Độ ẩm</div></div>
+        <div class="chart-wrap"><canvas id="humidityChart" aria-label="Biểu đồ độ ẩm" role="img"></canvas></div>
+      </article>
+    </section>
+
+    <div class="section-head">
+      <div><h2>Điều khiển và trạng thái thiết bị</h2><p>Máy bơm và quạt điều khiển thủ công; máy phun sương tự động theo độ ẩm.</p></div>
+      <span class="section-tag" id="deviceFreshness">Chưa nhận trạng thái thiết bị</span>
+    </div>
+    <section class="control-grid" aria-label="Điều khiển các thiết bị">
+      <article class="device-card" id="pumpCard">
+        <div class="device-top">
+          <div class="device-icon pump" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9a3 3 0 0 1 3 3v1"/><path d="M16 12h4v5h-4"/><path d="M6 8V5h5v3"/><path d="M4 17h12"/><circle cx="7" cy="17" r="2"/><path d="M18 7V4"/><path d="M16.5 5.5h3"/></svg>
+          </div>
+          <div class="device-info"><div class="device-name">Máy bơm (LED xanh lá)</div><div class="device-state"><span class="state-dot"></span><span id="pumpStateText">Chưa nhận trạng thái</span></div></div>
+        </div>
+        <button class="device-btn" id="pumpToggleBtn" type="button" disabled>Chưa có trạng thái</button>
+        <p class="mist-explain">Điều khiển thủ công bằng nút trên Website.</p>
+      </article>
+
+      <article class="device-card" id="fanCard">
+        <div class="device-top">
+          <div class="device-icon fan" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 10c-1-3-1.1-6 1-7 2.2-1.1 4.5 1.8 3.4 4.1-.7 1.5-2.3 2.5-4.4 2.9Z"/><path d="M14 12c3-1 6-1.1 7 1 1.1 2.2-1.8 4.5-4.1 3.4-1.5-.7-2.5-2.3-2.9-4.4Z"/><path d="M12 14c1 3 1.1 6-1 7-2.2 1.1-4.5-1.8-3.4-4.1.7-1.5 2.3-2.5 4.4-2.9Z"/><path d="M10 12c-3 1-6 1.1-7-1-1.1-2.2 1.8-4.5 4.1-3.4 1.5.7 2.5 2.3 2.9 4.4Z"/></svg>
+          </div>
+          <div class="device-info"><div class="device-name">Quạt (LED đỏ)</div><div class="device-state"><span class="state-dot"></span><span id="fanStateText">Chưa nhận trạng thái</span></div></div>
+        </div>
+        <button class="device-btn" id="fanToggleBtn" type="button" disabled>Chưa có trạng thái</button>
+        <p class="mist-explain">Điều khiển thủ công bằng nút trên Website.</p>
+      </article>
+
+      <article class="device-card mist-card" id="mistCard">
+        <div class="device-top">
+          <div class="device-icon mist" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16M6 12h12M8 16h8"/><path d="M8 4c-1 1-1 2 0 3M12 3c-1 1-1 2 0 3M16 4c-1 1-1 2 0 3"/></svg>
+          </div>
+          <div class="device-info"><div class="device-name">Máy phun sương tự động (LED xanh dương)</div><div class="device-state"><span class="state-dot"></span><span id="mistStateText">Chưa nhận trạng thái</span></div></div>
+        </div>
+        <div class="mist-current"><strong id="mistHumidity">--%</strong><span>Độ ẩm hiện tại</span></div>
+        <div class="mist-rule" id="mistRule">Đang chờ dữ liệu độ ẩm để xác định mức phun sương.</div>
+        <div class="mist-explain" id="mistOutputNote">Công suất thực tế: chưa nhận được trạng thái từ ESP32.</div>
+      </article>
+    </section>
+
+    <div class="manual-hint" id="controlHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7h.01"/></svg>
+      <span>Đang chờ kết nối MQTT. Khi ESP32 kết nối thành công, Website sẽ nhận dữ liệu cảm biến và trạng thái thiết bị.</span>
+    </div>
+
+    <section class="panel broker-panel" id="brokerConfig">
+      <div class="panel-header">
+        <div><h3 class="panel-title">Cấu hình kết nối MQTT</h3><p class="panel-subtitle">Địa chỉ Broker và tiền tố Topic phải trùng với chương trình ESP32.</p></div>
+        <span class="section-tag">EMQX Public Broker</span>
+      </div>
+      <div class="config-grid">
+        <div class="field"><label for="brokerUrl">Địa chỉ WebSocket Broker</label><input id="brokerUrl" type="url" value="wss://broker.emqx.io:8084/mqtt" spellcheck="false" autocomplete="off"></div>
+        <div class="field"><label for="topicPrefix">Tiền tố Topic (không có dấu / ở cuối)</label><input id="topicPrefix" type="text" value="lab3/garden/cafe_4729" spellcheck="false" autocomplete="off"></div>
+        <button class="primary-btn" id="reconnectBtn" type="button">Kết nối / Áp dụng</button>
+      </div>
+      <p class="config-help">Broker công khai phục vụ thực hành; người khác có thể quan sát bản tin nếu biết Topic. Hãy sử dụng tiền tố riêng và không gửi thông tin nhạy cảm.</p>
+      <div class="topic-list" id="topicList"></div>
+      <div class="log" id="eventLog" aria-live="polite">[Khởi tạo] Sẵn sàng kết nối đến MQTT Broker.</div>
+    </section>
+
+    <footer class="footer">
+      <div><strong>Vườn cây công nghiệp thông minh</strong><br>Lab 3 · ESP32 · FreeRTOS · DHT22 · MQTT</div>
+      <div>Độ ẩm mục tiêu: 40–60%. Máy phun sương tự động theo ba mức độ ẩm; máy bơm và quạt điều khiển thủ công.</div>
+    </footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (() => {
+      'use strict';
+
+      const DEFAULT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+      const DEFAULT_PREFIX = 'lab3/garden/cafe_4729';
+      const $ = (id) => document.getElementById(id);
+
+      let client = null;
+      let connected = false;
+      let pumpOn = null;
+      let fanOn = null;
+      let mistPercent = null;
+      let latestTemperature = null;
+      let latestHumidity = null;
+      let lastSensorMessageAt = null;
+      let lastStatusMessageAt = null;
+      let toastTimeout = null;
+      let temperatureChart = null;
+      let humidityChart = null;
+      const historyLabels = [];
+      const temperatureHistory = [];
+      const humidityHistory = [];
+      const MAX_POINTS = 30;
+
+      const topicSuffixes = {
+        telemetry: '/telemetry',
+        pumpSet: '/control/pump/set',
+        fanSet: '/control/fan/set',
+        status: '/status/actuators'
+      };
+      const topics = {};
+
+      function makeTopics(prefix) {
+        const root = prefix.trim().replace(/^\/+|\/+$/g, '');
+        if (!root || /\s/.test(root)) {
+          throw new Error('Tiền tố Topic không được để trống hoặc chứa dấu cách.');
+        }
+        Object.keys(topicSuffixes).forEach(key => topics[key] = root + topicSuffixes[key]);
+        renderTopics();
+      }
+
+      function renderTopics() {
+        const rows = [
+          ['Dữ liệu cảm biến · ESP32 → Website', topics.telemetry],
+          ['Điều khiển máy bơm · Website → ESP32', topics.pumpSet],
+          ['Điều khiển quạt · Website → ESP32', topics.fanSet],
+          ['Trạng thái thiết bị · ESP32 → Website', topics.status]
+        ];
+        $('topicList').innerHTML = rows.map(([label, topic]) =>
+          `<div class="topic-item"><div class="topic-label">${escapeHtml(label)}</div><code>${escapeHtml(topic)}</code></div>`
+        ).join('');
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, ch => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+      }
+
+      function log(message) {
+        const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+        const box = $('eventLog');
+        box.textContent += `[${time}] ${message}\n`;
+        box.textContent = box.textContent.split('\n').slice(-14).join('\n');
+        box.scrollTop = box.scrollHeight;
+      }
+
+      function showToast(message) {
+        const el = $('toast');
+        el.textContent = message;
+        el.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => el.classList.remove('show'), 3200);
+      }
+
+      function setConnectionState(state, text) {
+        const dot = $('connectionDot');
+        dot.className = 'dot ' + state;
+        $('connectionText').textContent = text;
+        connected = state === 'connected';
+        updateDeviceUI();
+        updateControlHint();
+      }
+
+      function initCharts() {
+        if (typeof Chart === 'undefined') {
+          log('Không tải được thư viện biểu đồ Chart.js. Các chức năng MQTT vẫn có thể hoạt động.');
+          document.querySelectorAll('.chart-wrap').forEach(el => {
+            el.innerHTML = '<p class="mist-explain">Không tải được thư viện biểu đồ. Hãy kiểm tra kết nối Internet và tải lại trang.</p>';
+          });
+          return;
+        }
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: false },
+            tooltip: { displayColors: false }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#7a8a80', maxTicksLimit: 6, font: { size: 10 } }, border: { display: false } },
+            y: { grid: { color: '#edf1ed' }, ticks: { color: '#7a8a80', font: { size: 10 } }, border: { display: false } }
+          }
+        };
+        temperatureChart = new Chart($('temperatureChart'), {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Nhiệt độ', data: [], borderColor: '#d7655d', backgroundColor: '#d7655d18', fill: true, tension: .32, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 }] },
+          options: JSON.parse(JSON.stringify(commonOptions))
+        });
+        humidityChart = new Chart($('humidityChart'), {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Độ ẩm', data: [], borderColor: '#3674b9', backgroundColor: '#3674b918', fill: true, tension: .32, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 }] },
+          options: JSON.parse(JSON.stringify(commonOptions))
+        });
+        humidityChart.options.scales.y.min = 0;
+        humidityChart.options.scales.y.max = 100;
+      }
+
+      function updateCharts() {
+        if (!temperatureChart || !humidityChart) return;
+        temperatureChart.data.labels = historyLabels;
+        temperatureChart.data.datasets[0].data = temperatureHistory;
+        temperatureChart.update('none');
+        humidityChart.data.labels = historyLabels;
+        humidityChart.data.datasets[0].data = humidityHistory;
+        humidityChart.update('none');
+      }
+
+      function updateSensorUI() {
+        if (latestTemperature !== null) {
+          $('temperatureValue').textContent = latestTemperature.toFixed(1);
+          $('temperatureNote').textContent = latestTemperature < 10 ? 'Nhiệt độ thấp' : latestTemperature > 35 ? 'Nhiệt độ cao' : 'Giá trị nhiệt độ mới nhất';
+          $('temperatureBar').style.width = Math.max(0, Math.min(100, latestTemperature / 50 * 100)) + '%';
+        }
+        if (latestHumidity !== null) {
+          $('humidityValue').textContent = latestHumidity.toFixed(1);
+          $('humidityBar').style.width = Math.max(0, Math.min(100, latestHumidity)) + '%';
+          $('humidityNote').textContent = latestHumidity < 40
+            ? 'Độ ẩm dưới ngưỡng mục tiêu 40–60%'
+            : latestHumidity > 60
+              ? 'Độ ẩm cao hơn vùng mục tiêu 40–60%'
+              : 'Độ ẩm đang trong vùng mục tiêu 40–60%';
+          $('mistHumidity').textContent = latestHumidity.toFixed(1) + '%';
+          updateMistAdvice();
+        }
+        if (lastSensorMessageAt) {
+          $('lastUpdateText').textContent = 'Cập nhật lúc ' + lastSensorMessageAt.toLocaleTimeString('vi-VN', { hour12: false });
+          $('sensorFreshness').textContent = 'Đã nhận dữ liệu';
+        }
+      }
+
+      function updateMistAdvice() {
+        const humidity = latestHumidity;
+        if (humidity === null) {
+          $('mistRule').textContent = 'Đang chờ dữ liệu độ ẩm từ cảm biến DHT22 để xác định mức phun sương.';
+          return;
+        }
+        if (humidity >= 40) {
+          $('mistRule').textContent = `Độ ẩm hiện tại ${humidity.toFixed(1)}%. Khi độ ẩm từ 40% trở lên, máy phun sương tắt. Mục tiêu duy trì độ ẩm là 40–60%.`;
+        } else if (humidity >= 35) {
+          $('mistRule').textContent = `Độ ẩm hiện tại ${humidity.toFixed(1)}%. Độ ẩm từ 35% đến dưới 40%: bật 25% công suất máy trong 10 giây.(LED sáng 25% trong 10 giây)`;
+        } else if (humidity >= 30) {
+          $('mistRule').textContent = `Độ ẩm hiện tại ${humidity.toFixed(1)}%. Độ ẩm từ 30% đến dưới 35%: bật 50% công suất máy trong 20 giây.(LED sáng 50% trong 20 giây)`;
+        } else {
+          $('mistRule').textContent = `Độ ẩm hiện tại ${humidity.toFixed(1)}%. Độ ẩm dưới 30%: bật 100% công suất máy trong 30 giây. (LED sáng 100% trong 30 giây)`;
+        }
+      }
+
+      function recordChartPoint() {
+        if (latestTemperature === null || latestHumidity === null) return;
+        const label = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+        historyLabels.push(label);
+        temperatureHistory.push(latestTemperature);
+        humidityHistory.push(latestHumidity);
+        if (historyLabels.length > MAX_POINTS) {
+          historyLabels.shift();
+          temperatureHistory.shift();
+          humidityHistory.shift();
+        }
+        updateCharts();
+      }
+
+      function updateOneDevice(which, isOn) {
+        const card = $(which + 'Card');
+        const text = $(which + 'StateText');
+        const btn = $(which + 'ToggleBtn');
+        if (isOn === null) {
+          text.textContent = 'Chưa nhận trạng thái';
+          btn.textContent = 'Chưa có trạng thái';
+          btn.classList.remove('turn-on', 'turn-off');
+          card.classList.remove('is-on');
+        } else {
+          text.textContent = isOn ? 'Đang bật' : 'Đang tắt';
+          btn.textContent = isOn ? 'Tắt thiết bị' : 'Bật thiết bị';
+          btn.classList.toggle('turn-on', !isOn);
+          btn.classList.toggle('turn-off', isOn);
+          card.classList.toggle('is-on', isOn);
+        }
+        btn.disabled = !connected || isOn === null;
+      }
+
+      function updateDeviceUI() {
+        updateOneDevice('pump', pumpOn);
+        updateOneDevice('fan', fanOn);
+        const mistCard = $('mistCard');
+        const mistText = $('mistStateText');
+        if (mistPercent === null) {
+          mistText.textContent = 'Chưa nhận trạng thái';
+          $('mistOutputNote').textContent = 'Công suất thực tế: chưa nhận được trạng thái từ ESP32.';
+          mistCard.classList.remove('is-on');
+        } else {
+          mistText.textContent = mistPercent > 0 ? 'Đang phun sương' : 'Đang tắt';
+          $('mistOutputNote').textContent = mistPercent > 0
+            ? `Công suất thực tế do ESP32 báo về: ${mistPercent}%.`
+            : 'Công suất thực tế do ESP32 báo về: 0% (máy đang tắt hoặc nghỉ giữa các chu kỳ).';
+          mistCard.classList.toggle('is-on', mistPercent > 0);
+        }
+        if (lastStatusMessageAt) {
+          $('deviceFreshness').textContent = 'Đã đồng bộ trạng thái';
+        }
+      }
+
+      function updateControlHint() {
+        const hint = $('controlHint');
+        if (!connected) {
+          hint.className = 'manual-hint';
+          hint.lastElementChild.textContent = 'Chưa kết nối MQTT. Hãy kiểm tra địa chỉ Broker, tiền tố Topic và trạng thái mô phỏng ESP32.';
+        } else {
+          hint.className = 'manual-hint ok';
+          hint.lastElementChild.textContent = 'Đã kết nối MQTT. Máy bơm và quạt có thể bật/tắt thủ công. Máy phun sương được ESP32 điều khiển tự động theo độ ẩm.';
+        }
+      }
+
+      function publishMessage(topic, payload) {
+        if (!client || !client.connected) {
+          showToast('Chưa kết nối MQTT nên chưa thể gửi lệnh.');
+          return false;
+        }
+        client.publish(topic, payload, { qos: 0, retain: false }, (error) => {
+          if (error) {
+            log('Gửi lệnh thất bại: ' + error.message);
+            showToast('Gửi lệnh thất bại. Hãy kiểm tra kết nối MQTT.');
+          } else {
+            log('Đã gửi lệnh đến: ' + topic);
+          }
+        });
+        return true;
+      }
+
+      function toggleDevice(which) {
+        const isOn = which === 'pump' ? pumpOn : fanOn;
+        if (isOn === null) {
+          showToast('Chưa nhận được trạng thái thiết bị từ ESP32.');
+          return;
+        }
+        const topic = which === 'pump' ? topics.pumpSet : topics.fanSet;
+        const nextState = !isOn;
+        const payload = JSON.stringify({ state: nextState });
+        if (publishMessage(topic, payload)) {
+          showToast(`Đã gửi lệnh ${nextState ? 'bật' : 'tắt'} ${which === 'pump' ? 'máy bơm' : 'quạt'}. Đang chờ ESP32 cập nhật trạng thái.`);
+        }
+      }
+
+      function disconnectClient() {
+        if (client) {
+          try { client.end(true); } catch (_) {}
+          client = null;
+        }
+        setConnectionState('disconnected', 'Đã ngắt kết nối MQTT');
+      }
+
+      function connectMqtt() {
+        if (!window.mqtt || typeof window.mqtt.connect !== 'function') {
+          setConnectionState('disconnected', 'Không tải được thư viện MQTT');
+          log('Không tải được thư viện MQTT.js. Hãy kiểm tra kết nối Internet và tải lại trang.');
+          showToast('Không tải được thư viện MQTT.js.');
+          return;
+        }
+
+        const brokerUrl = $('brokerUrl').value.trim() || DEFAULT_BROKER;
+        try {
+          makeTopics($('topicPrefix').value);
+          const parsed = new URL(brokerUrl);
+          if (!['wss:', 'ws:'].includes(parsed.protocol)) {
+            throw new Error('Địa chỉ Broker phải bắt đầu bằng wss:// hoặc ws://.');
+          }
+        } catch (error) {
+          showToast(error.message || 'Cấu hình MQTT không hợp lệ.');
+          return;
+        }
+
+        if (client) {
+          try { client.end(true); } catch (_) {}
+          client = null;
+        }
+
+        pumpOn = null;
+        fanOn = null;
+        mistPercent = null;
+        updateDeviceUI();
+        setConnectionState('connecting', 'Đang kết nối MQTT…');
+        log('Đang kết nối đến Broker: ' + brokerUrl);
+
+        const uniqueId = 'web_vuon_cay_' + Math.random().toString(16).slice(2, 10);
+        let thisClient;
+        try {
+          thisClient = window.mqtt.connect(brokerUrl, {
+            clientId: uniqueId,
+            clean: true,
+            connectTimeout: 10000,
+            reconnectPeriod: 3000,
+            keepalive: 30,
+            protocolVersion: 4
+          });
+          client = thisClient;
+        } catch (error) {
+          setConnectionState('disconnected', 'Không khởi tạo được kết nối');
+          log('Không khởi tạo được kết nối MQTT: ' + error.message);
+          return;
+        }
+
+        thisClient.on('connect', () => {
+          if (client !== thisClient) return;
+          setConnectionState('connected', 'Đã kết nối MQTT');
+          log('Kết nối MQTT thành công.');
+          const subscribeTopics = [topics.telemetry, topics.status];
+          thisClient.subscribe(subscribeTopics, { qos: 0 }, (error) => {
+            if (client !== thisClient) return;
+            if (error) {
+              log('Không đăng ký nhận được Topic: ' + error.message);
+              showToast('Đã kết nối nhưng đăng ký Topic thất bại.');
+            } else {
+              log('Đã đăng ký nhận dữ liệu cảm biến và trạng thái thiết bị.');
+              showToast('Đã kết nối MQTT. Đang chờ dữ liệu từ ESP32…');
+            }
+          });
+        });
+
+        thisClient.on('reconnect', () => {
+          if (client === thisClient) setConnectionState('connecting', 'Đang kết nối lại…');
+        });
+        thisClient.on('offline', () => {
+          if (client !== thisClient) return;
+          setConnectionState('disconnected', 'MQTT ngoại tuyến');
+          log('Kết nối MQTT đang ngoại tuyến.');
+        });
+        thisClient.on('close', () => {
+          if (client === thisClient) setConnectionState('disconnected', 'Mất kết nối MQTT');
+        });
+        thisClient.on('error', (error) => {
+          if (client !== thisClient) return;
+          log('Lỗi MQTT: ' + (error && error.message ? error.message : 'Không xác định'));
+        });
+
+        thisClient.on('message', (topic, payloadBuffer) => {
+          if (client !== thisClient) return;
+          const payload = payloadBuffer.toString().trim();
+          let data;
+          try {
+            data = JSON.parse(payload);
+          } catch (error) {
+            log('Bản tin không đúng định dạng JSON: ' + payload);
+            return;
+          }
+
+          if (topic === topics.telemetry) {
+            const temperature = Number(data.temperature);
+            const humidity = Number(data.humidity);
+            if (!Number.isFinite(temperature) || !Number.isFinite(humidity)) {
+              log('Dữ liệu nhiệt độ hoặc độ ẩm không hợp lệ.');
+              return;
+            }
+            latestTemperature = temperature;
+            latestHumidity = humidity;
+            lastSensorMessageAt = new Date();
+            updateSensorUI();
+            recordChartPoint();
+
+          } else if (topic === topics.status) {
+            if (typeof data.pump === 'boolean') pumpOn = data.pump;
+            if (typeof data.fan === 'boolean') fanOn = data.fan;
+            if (data.mistPercent !== undefined && Number.isFinite(Number(data.mistPercent))) {
+              mistPercent = Math.max(0, Math.min(100, Number(data.mistPercent)));
+            }
+            lastStatusMessageAt = new Date();
+            updateDeviceUI();
+          }
+        });
+      }
+
+      function updateClock() {
+        $('clockText').textContent = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+      }
+
+      function checkDataFreshness() {
+        if (!lastSensorMessageAt) return;
+        const age = Date.now() - lastSensorMessageAt.getTime();
+        if (age > 15000) {
+          $('sensorFreshness').textContent = 'Dữ liệu đã cũ';
+          $('sensorFreshness').style.color = '#a56411';
+        } else {
+          $('sensorFreshness').textContent = 'Dữ liệu đang cập nhật';
+          $('sensorFreshness').style.color = '';
+        }
+      }
+
+      $('scrollConfigBtn').addEventListener('click', () => {
+        $('brokerConfig').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      $('reconnectBtn').addEventListener('click', connectMqtt);
+      $('pumpToggleBtn').addEventListener('click', () => toggleDevice('pump'));
+      $('fanToggleBtn').addEventListener('click', () => toggleDevice('fan'));
+      $('topicPrefix').addEventListener('keydown', event => {
+        if (event.key === 'Enter') connectMqtt();
+      });
+      $('brokerUrl').addEventListener('keydown', event => {
+        if (event.key === 'Enter') connectMqtt();
+      });
+
+      initCharts();
+      updateClock();
+      setInterval(updateClock, 1000);
+      setInterval(checkDataFreshness, 3000);
+      makeTopics(DEFAULT_PREFIX);
+      setConnectionState('connecting', 'Đang kết nối MQTT…');
+      log('Broker mặc định: ' + DEFAULT_BROKER);
+      log('Đang sử dụng Topic của bài Lab 3.');
+      connectMqtt();
+    })();
+  </script>
+</body>
+</html>
